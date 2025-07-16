@@ -1,0 +1,61 @@
+{
+  "users": [
+    {
+      "name": "M.S dhoni(Thala)",
+      "badge": "Thala",
+      "comments": [
+        "bole jo koyal bago me",
+        "world cup 2019 mene jitaya tha",
+        "papa hun trophy ka papa.",
+        "kohli ne jaanbujkar 2015 ka world cup harwaya",
+        "ola hu uber"
+      ]
+    },
+    {
+      "name": "Virat kohli",
+      "badge": "king",
+      "comments": [
+        "jai mahakal",
+        "ola hu uber",
+        "meri beard pak gayi ab nhi khelunga",
+"mere teen bete sabse bada wala beta pakistan"
+      ]
+    },
+    {
+      "name": "LiveStream_King",
+      "badge": "MOD",
+      "comments": [
+        "Stream is running smoothly for everyone.",
+        "Enjoy the show, everyone! 🍿",
+        "No spoilers in the chat, please."
+      ]
+    },
+    {
+      "name": "SportsLover",
+      "badge": "VIP",
+      "comments": [
+        "That was a close call!",
+        "Come on, defense!",
+        "The crowd is going wild! 📣"
+      ]
+    },
+    {
+      "name": "TechGuru99",
+      "badge": "PRO",
+      "comments": [
+        "The video quality is superb. 💻",
+        "Running this on a 4K monitor, looks great.",
+        "No lag at all, impressive."
+      ]
+    },
+    {
+      "name": "StreamWatcher",
+      "badge": "USER",
+      "comments": [
+        "Hello everyone!",
+        "Thanks for the stream!",
+        "This is awesome. 😎"
+      ]
+    }
+  ]
+}
