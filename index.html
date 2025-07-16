@@ -2,6 +2,885 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live TV Viewer</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+      font-family: 'Segoe UI', Arial, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Responsive video iframe */
+    .video-container {
+      width: 100%;
+      max-width: 900px;
+      margin: 0 auto;
+      padding-top: 32px;
+      position: relative;
+    }
+    
+    iframe {
+      width: 100%;
+      height: 500px;
+      border: none;
+      background: #111;
+      display: block;
+      border-radius: 16px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.1);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    iframe:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(0,136,204,0.5), 0 8px 40px rgba(0,136,204,0.2);
+      transform: translateY(-2px);
+    }
+
+    /* Channel Selection Buttons */
+    .channel-selector {
+      width: 100%;
+      max-width: 900px;
+      margin: 20px auto;
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      padding: 0 20px;
+    }
+
+    .channel-btn {
+      background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #1e40af 100%);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.1);
+      min-width: 120px;
+    }
+
+    .channel-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      transition: left 0.5s;
+    }
+
+    .channel-btn:hover::before {
+      left: 100%;
+    }
+
+    .channel-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+      background: linear-gradient(135deg, #2563eb 0%, #60a5fa 50%, #3b82f6 100%);
+    }
+
+    .channel-btn.active {
+      background: linear-gradient(135deg, #dc2626 0%, #f87171 50%, #ef4444 100%);
+      box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);
+      transform: translateY(-1px);
+    }
+
+    .channel-btn.active:hover {
+      box-shadow: 0 6px 20px rgba(220, 38, 38, 0.5);
+    }
+
+    /* Telegram Button - Moved to middle */
+    .telegram-section {
+      width: 100%;
+      max-width: 900px;
+      margin: 24px auto;
+      text-align: center;
+      padding: 0 20px;
+    }
+
+    .telegram-btn {
+      display: inline-block;
+      background: linear-gradient(135deg, #0088cc 0%, #00b4d8 50%, #0077b6 100%);
+      color: #fff;
+      padding: 16px 36px;
+      border: none;
+      border-radius: 16px;
+      font-size: 18px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(0,136,204,0.3);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.1);
+      text-decoration: none;
+    }
+
+    .telegram-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      transition: left 0.5s;
+    }
+
+    .telegram-btn:hover::before {
+      left: 100%;
+    }
+
+    .telegram-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 30px rgba(0,136,204,0.4);
+      background: linear-gradient(135deg, #006b9e 0%, #0088cc 50%, #00b4d8 100%);
+    }
+
+    .telegram-btn:active {
+      transform: translateY(-1px);
+    }
+
+    /* Enhanced Live Chat Section */
+    .live-chat-container {
+      width: 100%;
+      max-width: 900px;
+      margin: 0 auto;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f172a 100%);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.1);
+      backdrop-filter: blur(20px);
+      position: relative;
+    }
+
+    .live-chat-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #0088cc, transparent);
+      animation: topGlow 3s ease-in-out infinite;
+    }
+
+    @keyframes topGlow {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 1; }
+    }
+
+    .chat-header {
+      background: linear-gradient(135deg, #0088cc 0%, #00b4d8 50%, #0077b6 100%);
+      padding: 20px 24px;
+      color: white;
+      font-weight: 600;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Toggle Button */
+    .chat-toggle {
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 20px;
+      padding: 6px 12px;
+      color: white;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      backdrop-filter: blur(10px);
+      margin-left: 12px;
+    }
+
+    .chat-toggle:hover {
+      background: rgba(255,255,255,0.2);
+      transform: translateY(-1px);
+    }
+
+    .chat-toggle.off {
+      background: rgba(255,68,68,0.15);
+      border-color: rgba(255,68,68,0.3);
+    }
+
+    .toggle-icon {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #00ff88;
+      box-shadow: 0 0 8px rgba(0,255,136,0.5);
+      transition: all 0.3s ease;
+    }
+
+    .toggle-icon.off {
+      background: #ff4444;
+      box-shadow: 0 0 8px rgba(255,68,68,0.5);
+    }
+
+    /* Chat disabled state */
+    .chat-messages.disabled {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    .chat-messages.disabled::after {
+      content: 'Live Comments Disabled';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0,0,0,0.8);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .chat-header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      animation: shimmer 4s infinite;
+    }
+
+    @keyframes shimmer {
+      0% { left: -100%; }
+      100% { left: 100%; }
+    }
+
+    .live-indicator {
+      width: 14px;
+      height: 14px;
+      background: radial-gradient(circle, #ff4444 0%, #cc0000 100%);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+      box-shadow: 0 0 15px rgba(255,68,68,0.6);
+      position: relative;
+    }
+
+    .live-indicator::after {
+      content: '';
+      position: absolute;
+      top: -2px;
+      left: -2px;
+      right: -2px;
+      bottom: -2px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,68,68,0.3);
+      animation: ripple 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.1); opacity: 0.8; }
+    }
+
+    @keyframes ripple {
+      0% { transform: scale(0.8); opacity: 1; }
+      100% { transform: scale(2); opacity: 0; }
+    }
+
+    .chat-messages {
+      height: 320px;
+      overflow-y: auto;
+      padding: 20px;
+      background: linear-gradient(135deg, #0f1419 0%, #1a202c 100%);
+      scrollbar-width: thin;
+      scrollbar-color: #4a5568 #1a202c;
+      position: relative;
+    }
+
+    .chat-messages::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .chat-messages::-webkit-scrollbar-track {
+      background: #1a202c;
+      border-radius: 4px;
+    }
+
+    .chat-messages::-webkit-scrollbar-thumb {
+      background: linear-gradient(135deg, #4a5568, #718096);
+      border-radius: 4px;
+    }
+
+    .chat-messages::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(135deg, #718096, #a0aec0);
+    }
+
+    .chat-message {
+      margin-bottom: 16px;
+      padding: 16px 20px;
+      background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+      border-radius: 16px;
+      color: white;
+      transform: translateX(-20px);
+      opacity: 0;
+      animation: slideInMessage 0.6s ease-out forwards;
+      border-left: 4px solid #0088cc;
+      position: relative;
+      overflow: hidden;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.1);
+      transition: all 0.3s ease;
+    }
+
+    .chat-message:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+      border-left-color: #00b4d8;
+    }
+
+    .chat-message::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+      transition: left 0.5s;
+    }
+
+    .chat-message:hover::before {
+      left: 100%;
+    }
+
+    .chat-message::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(45deg, transparent 30%, rgba(0,136,204,0.1) 50%, transparent 70%);
+      transform: translateX(-100%);
+      animation: messageGlow 2s ease-out;
+    }
+
+    @keyframes slideInMessage {
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    @keyframes messageGlow {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+
+    .chat-username {
+      font-weight: 700;
+      color: #00b4d8;
+      font-size: 15px;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .user-badge {
+      background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+      color: white;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      box-shadow: 0 2px 8px rgba(255,107,107,0.3);
+    }
+
+    .chat-text {
+      font-size: 14px;
+      line-height: 1.5;
+      color: #e2e8f0;
+    }
+
+    .chat-time {
+      font-size: 11px;
+      color: #718096;
+      margin-top: 6px;
+      opacity: 0.7;
+      font-weight: 500;
+    }
+
+    .typing-indicator {
+      display: none;
+      padding: 16px 20px;
+      color: #718096;
+      font-style: italic;
+      font-size: 14px;
+      align-items: center;
+      gap: 10px;
+      background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+      border-radius: 12px;
+      margin: 0 20px 20px 20px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .typing-dots {
+      display: flex;
+      gap: 4px;
+    }
+
+    .typing-dot {
+      width: 6px;
+      height: 6px;
+      background: linear-gradient(45deg, #0088cc, #00b4d8);
+      border-radius: 50%;
+      animation: typing 1.4s infinite;
+      box-shadow: 0 0 8px rgba(0,136,204,0.5);
+    }
+
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes typing {
+      0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+      30% { transform: translateY(-8px); opacity: 1; }
+    }
+
+    .online-count {
+      background: rgba(0,0,0,0.3);
+      padding: 10px 16px;
+      border-radius: 25px;
+      font-size: 12px;
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .online-dot {
+      width: 8px;
+      height: 8px;
+      background: radial-gradient(circle, #00ff88 0%, #00cc66 100%);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+      box-shadow: 0 0 12px rgba(0,255,136,0.5);
+    }
+
+    /* Popup styling */
+    #popupMessage {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      min-width: 300px;
+      background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+      color: #1a202c;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      z-index: 1000;
+      text-align: center;
+      padding: 32px 24px 24px 24px;
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    #popupMessage h3 {
+      margin-top: 0;
+      color: #0088cc;
+      font-size: 1.4em;
+      font-weight: 700;
+    }
+
+    #popupMessage p {
+      margin: 12px 0 20px 0;
+      font-size: 1em;
+      color: #4a5568;
+    }
+
+    #popupMessage button {
+      padding: 12px 24px;
+      font-size: 16px;
+      margin: 12px 8px 0 8px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .popup-join {
+      background: linear-gradient(135deg, #0088cc 0%, #00b4d8 100%);
+      color: white;
+      box-shadow: 0 4px 15px rgba(0,136,204,0.3);
+    }
+
+    .popup-join:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,136,204,0.4);
+    }
+
+    .popup-cancel {
+      background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e0 100%);
+      color: #4a5568;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    .popup-cancel:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    }
+
+    @media (max-width: 700px) {
+      .video-container {
+        padding-top: 12px;
+      }
+      
+      iframe {
+        height: 350px;
+        border-radius: 12px;
+      }
+      
+      .channel-selector {
+        gap: 12px;
+        margin: 16px auto;
+      }
+      
+      .channel-btn {
+        padding: 10px 20px;
+        font-size: 13px;
+        min-width: 100px;
+      }
+      
+      .live-chat-container {
+        margin: 16px auto 0 auto;
+        border-radius: 16px;
+      }
+      
+      .chat-messages {
+        height: 280px;
+        padding: 16px;
+      }
+      
+      .chat-header {
+        padding: 16px 20px;
+        font-size: 16px;
+      }
+      
+      .chat-message {
+        padding: 12px 16px;
+        margin-bottom: 12px;
+      }
+      
+      .telegram-btn {
+        padding: 14px 28px;
+        font-size: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="video-container">
+    <iframe
+      id="contentFrame"
+      sandbox="allow-forms allow-pointer-lock allow-same-origin allow-scripts allow-top-navigation"
+      allow="encrypted-media"
+      allowfullscreen="true"
+      scrolling="no"
+      src="https://tataplays.site/sonyliv.html?id=300255">
+    </iframe>
+  </div>
+
+  <!-- Channel Selection Buttons -->
+  <div class="channel-selector">
+    <button class="channel-btn active" onclick="changeChannel('https://tataplays.site/sonyliv.html?id=300255', this)">
+      Sony LIV
+    </button>
+    <button class="channel-btn" onclick="changeChannel('https://tataplays.site/hotstar.html?id=sports1', this)">
+      Hotstar Sports
+    </button>
+    <button class="channel-btn" onclick="changeChannel('https://tataplays.site/zee5.html?id=cricket', this)">
+      ZEE5 Cricket
+    </button>
+    <button class="channel-btn" onclick="changeChannel('https://tataplays.site/voot.html?id=live1', this)">
+      Voot Live
+    </button>
+  </div>
+
+  <!-- Telegram Button - Moved to middle -->
+  <div class="telegram-section">
+    <button class="telegram-btn" onclick="showPopup()">
+      📱 Join Telegram Channel
+    </button>
+  </div>
+
+  <div class="live-chat-container">
+    <div class="chat-header">
+      <div class="live-indicator"></div>
+      <span>Live Chat</span>
+      <button class="chat-toggle" onclick="toggleLiveChat()" id="chatToggle">
+        <div class="toggle-icon" id="toggleIcon"></div>
+        <span id="toggleText">ON</span>
+      </button>
+      <div class="online-count">
+        <div class="online-dot"></div>
+        <span id="onlineCount">1,247</span>
+      </div>
+    </div>
+    <div class="chat-messages" id="chatMessages">
+    </div>
+    <div class="typing-indicator" id="typingIndicator">
+      <div class="typing-dots">
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+      </div>
+      <span id="typingUser">Someone</span> is typing...
+    </div>
+  </div>
+
+  <div id="popupMessage">
+    <h3>Join our Telegram Channel</h3>
+    <p>Get instant updates and live links directly on Telegram.</p>
+    <button class="popup-join" onclick="joinTelegram()">Join Now</button>
+    <button class="popup-cancel" onclick="hidePopup()">Cancel</button>
+  </div>
+
+  <script>
+    // Global variable to hold chat data
+    let chatData = { users: [] };
+    let onlineUsers = 1247;
+    let chatInterval;
+    let isLiveChatEnabled = true; // Start with live chat enabled
+
+    // Toggle live chat function
+    function toggleLiveChat() {
+      const chatMessages = document.getElementById('chatMessages');
+      const toggleButton = document.getElementById('chatToggle');
+      const toggleIcon = document.getElementById('toggleIcon');
+      const toggleText = document.getElementById('toggleText');
+      const typingIndicator = document.getElementById('typingIndicator');
+      
+      isLiveChatEnabled = !isLiveChatEnabled;
+      
+      if (isLiveChatEnabled) {
+        // Enable live chat
+        chatMessages.classList.remove('disabled');
+        toggleButton.classList.remove('off');
+        toggleIcon.classList.remove('off');
+        toggleText.textContent = 'ON';
+        typingIndicator.style.display = 'none';
+        
+        // Restart chat interval
+        startChatInterval();
+      } else {
+        // Disable live chat
+        chatMessages.classList.add('disabled');
+        toggleButton.classList.add('off');
+        toggleIcon.classList.add('off');
+        toggleText.textContent = 'OFF';
+        typingIndicator.style.display = 'none';
+        
+        // Clear chat interval
+        if (chatInterval) {
+          clearInterval(chatInterval);
+        }
+      }
+    }
+
+    // Channel management
+    function changeChannel(url, button) {
+      // Remove active class from all buttons
+      document.querySelectorAll('.channel-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      
+      // Add active class to clicked button
+      button.classList.add('active');
+      
+      // Change iframe source
+      document.getElementById('contentFrame').src = url;
+    }
+
+    // Fetch chat data from the JSON file
+    async function loadChatData() {
+      try {
+        const response = await fetch('comments.json');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        chatData = await response.json();
+        startChat(); // Start the chat *after* data is loaded
+      } catch (error) {
+        console.error("Could not load chat data:", error);
+        // Fallback or error message
+        const chatMessages = document.getElementById('chatMessages');
+        chatMessages.innerHTML = `<div class="chat-text" style="padding: 20px; text-align: center; color: #718096;">Could not load comments. Please refresh the page.</div>`;
+      }
+    }
+
+    function getRandomUserAndComment() {
+      // Get a random user
+      const randomUser = chatData.users[Math.floor(Math.random() * chatData.users.length)];
+      // Get a random comment from that user's list of comments
+      const randomComment = randomUser.comments[Math.floor(Math.random() * randomUser.comments.length)];
+      
+      return { user: randomUser, comment: randomComment };
+    }
+
+    function getCurrentTime() {
+      const now = new Date();
+      return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function showTypingIndicator() {
+      if (!isLiveChatEnabled) return; // Don't show typing if chat is disabled
+      
+      const typingIndicator = document.getElementById('typingIndicator');
+      const typingUser = document.getElementById('typingUser');
+      
+      // Get a random user to show as "typing"
+      const randomUser = chatData.users[Math.floor(Math.random() * chatData.users.length)];
+      typingUser.textContent = randomUser.name;
+      typingIndicator.style.display = 'flex';
+      
+      setTimeout(() => {
+        typingIndicator.style.display = 'none';
+      }, 3000); // Hide after 3 seconds (increased)
+    }
+
+    function addMessage() {
+      if (chatData.users.length === 0 || !isLiveChatEnabled) return; // Don't add a message if data isn't loaded or chat is disabled
+
+      const chatMessages = document.getElementById('chatMessages');
+      const { user, comment } = getRandomUserAndComment();
+      const time = getCurrentTime();
+      
+      const messageElement = document.createElement('div');
+      messageElement.className = 'chat-message';
+      messageElement.innerHTML = `
+        <div class="chat-username">
+          ${user.name}
+          <span class="user-badge">${user.badge}</span>
+        </div>
+        <div class="chat-text">${comment}</div>
+        <div class="chat-time">${time}</div>
+      `;
+      
+      chatMessages.appendChild(messageElement);
+      
+      // Remove old messages if there are too many
+      if (chatMessages.children.length > 15) {
+        chatMessages.removeChild(chatMessages.firstChild);
+      }
+      
+      // Scroll to bottom smoothly
+      chatMessages.scrollTo({
+        top: chatMessages.scrollHeight,
+        behavior: 'smooth'
+      });
+      
+      // Update online count randomly
+      const variation = Math.floor(Math.random() * 25) - 12;
+      onlineUsers += variation;
+      if (onlineUsers < 1000) onlineUsers = 1000;
+      if (onlineUsers > 2000) onlineUsers = 2000;
+      document.getElementById('onlineCount').textContent = onlineUsers.toLocaleString();
+    }
+
+    function startChatInterval() {
+      // Clear any existing interval
+      if (chatInterval) {
+        clearInterval(chatInterval);
+      }
+      
+      // Start regular message interval (slowed down)
+      chatInterval = setInterval(() => {
+        if (isLiveChatEnabled) {
+          showTypingIndicator();
+          setTimeout(addMessage, 4000); // Add message 4 seconds after typing starts
+        }
+      }, 15000); // Repeat every 15 seconds (slowed down from 8 seconds)
+    }
+
+    function startChat() {
+      // Add initial messages with staggered timing
+      for (let i = 0; i < 4; i++) {
+        setTimeout(addMessage, i * 2000);
+      }
+      
+      // Start the chat interval
+      startChatInterval();
+    }
+
+    // Original popup functions
+    function showPopup() {
+      document.getElementById("popupMessage").style.display = "block";
+    }
+    
+    function hidePopup() {
+      document.getElementById("popupMessage").style.display = "none";
+    }
+    
+    function joinTelegram() {
+      window.open("https://telegram.me/+q1P8ArfVAlU1YzZl", "_blank");
+      hidePopup();
+    }
+    
+    // Close popup on ESC key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === "Escape") hidePopup();
+    });
+
+    // Close popup when clicking outside
+    document.addEventListener('click', function(e) {
+      const popup = document.getElementById("popupMessage");
+      if (e.target === popup) {
+        hidePopup();
+      }
+    });
+
+    // Initialize chat when page loads
+    document.addEventListener('DOMContentLoaded', loadChatData);
+  </script>
+
+</body>
+</html><!--DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
   <meta http-equiv="refresh" content="0;url=https://crxcs.blogspot.com/p/somy3hindi.html?m=1">
   <title>Redirecting...</title>
 </head>
