@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dynamic Live TV Viewer</title>
+  <style>
+    html, body {
+      margin: 0;
+      [span_0](start_span)padding: 0;[span_0](end_span)
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+      font-family: 'Segoe UI', Arial, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Responsive video iframe */
+    .video-container {
+      width: 100%;
+      [span_1](start_span)max-width: 900px;[span_1](end_span)
+      margin: 0 auto;
+      padding-top: 32px;
+      position: relative;
+    }
+    
+    iframe {
+      width: 100%;
+      height: 280px; /* Height reduced */
+      border: none;
+      background: #111;
+      display: block;
+      border-radius: 16px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.1);
+      transition: all 0.3s ease, opacity 0.4s ease-in-out; /* Animation added */
+      position: relative;
+      overflow: hidden;
+    }
+    
+    iframe:focus {
+      outline: none;
+      [span_2](start_span)box-shadow: 0 0 0 3px rgba(0,136,204,0.5), 0 8px 40px rgba(0,136,204,0.2);[span_2](end_span)
+      transform: translateY(-2px);
+    }
+
+    /* Channel Selection Buttons */
+    .channel-selector {
+      width: 100%;
+      [span_3](start_span)max-width: 900px;[span_3](end_span)
+      margin: 20px auto;
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      padding: 0 20px;
+    }
+
+    .channel-btn {
+      background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #1e40af 100%);
+      [span_4](start_span)color: white;[span_4](end_span)
+      border: none;
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      [span_5](start_span)transition: all 0.3s ease;[span_5](end_span)
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.1);
+      min-width: 120px;
+    }
+
+    .channel-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      [span_6](start_span)width: 100%;[span_6](end_span)
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      [span_7](start_span)transition: left 0.5s;[span_7](end_span)
+    }
+
+    .channel-btn:hover::before {
+      [span_8](start_span)left: 100%;[span_8](end_span)
+    }
+
+    .channel-btn:hover {
+      transform: translateY(-2px);
+      [span_9](start_span)box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);[span_9](end_span)
+      background: linear-gradient(135deg, #2563eb 0%, #60a5fa 50%, #3b82f6 100%);
+    }
+
+    .channel-btn.active {
+      background: linear-gradient(135deg, #dc2626 0%, #f87171 50%, #ef4444 100%);
+      [span_10](start_span)box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);[span_10](end_span)
+      transform: translateY(-1px);
+    }
+
+    .channel-btn.active:hover {
+      [span_11](start_span)box-shadow: 0 6px 20px rgba(220, 38, 38, 0.5);[span_11](end_span)
+    }
+    
+    @media (max-width: 700px) {
+      .video-container {
+        [span_12](start_span)padding-top: 12px;[span_12](end_span)
+      }
+      
+      iframe {
+        height: 320px; /* Height reduced for mobile */
+        [span_13](start_span)border-radius: 12px;[span_13](end_span)
+      }
+      
+      .channel-selector {
+        gap: 12px;
+        [span_14](start_span)margin: 16px auto;[span_14](end_span)
+      }
+    }
+    
+    /* Other styles from the original file remain unchanged... */
+
+  </style>
+</head>
+<body>
+
+  <div class="video-container">
+    <iframe
+      id="contentFrame"
+      sandbox="allow-forms allow-pointer-lock allow-same-origin allow-scripts allow-top-navigation"
+      allow="encrypted-media"
+      allowfullscreen="true"
+      scrolling="no"
+      src="">
+    </iframe>
+  </div>
+
+  <div class="channel-selector" id="channelSelector">
+    </div>
+
+  <script>
+    // Channel management
+    function changeChannel(url, button) {
+      const iframe = document.getElementById('contentFrame');
+      
+      // 1. Fade out the iframe
+      iframe.style.opacity = '0';
+
+      // 2. Remove active class from all buttons
+      document.querySelectorAll('.channel-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      // 3. Add active class to the clicked button
+      button.classList.add('active');
+
+      // 4. Change src and fade back in after a short delay
+      setTimeout(() => {
+        iframe.src = url;
+        iframe.style.opacity = '1';
+      }, 400); // 400ms delay matches the CSS transition
+    }
+
+    // New function to build buttons and set initial iframe source from URL
+    function initializeChannels() {
+      const params = new URLSearchParams(window.location.search);
+      const selector = document.getElementById('channelSelector');
+      const iframe = document.getElementById('contentFrame');
+      const links = [];
+
+      // Collect all 'link' parameters from the URL
+      for (const [key, value] of params) {
+        if (key.startsWith('link')) {
+          links.push(value);
+        }
+      }
+
+      // If no links are provided in the URL, show a message
+      if (links.length === 0) {
+        selector.innerHTML = '<p style="color: #718096; text-align: center;">No channels provided. <br> Add links to the URL like "?link1=url&link2=url"</p>';
+        iframe.style.display = 'none'; // Hide the empty iframe
+        return;
+      }
+
+      // Set the first link as the primary iframe source
+      iframe.src = links[0];
+
+      // Create a button for each link found
+      links.forEach((link, index) => {
+        const button = document.createElement('button');
+        button.className = 'channel-btn';
+        // Make the first button active by default
+        if (index === 0) {
+          button.classList.add('active');
+        }
+
+        let name = `Channel ${index + 1}`; // Default name
+        try {
+          // Try to create a more descriptive name from the URL's hostname
+          const url = new URL(link);
+          name = url.hostname.replace(/^(www\.)|(\.com|\.net|\.org|\.io|\.github\.io|\.site|\.blogspot)$/g, '');
+        } catch (e) {
+          // If the link is not a full URL, use the default name
+        }
+
+        button.textContent = name.charAt(0).toUpperCase() + name.slice(1);
+        button.onclick = () => changeChannel(link, button);
+        selector.appendChild(button);
+      });
+    }
+
+    // Initialize channels when the page content is loaded
+    document.addEventListener('DOMContentLoaded', initializeChannels);
+
+    // Your existing script for chat, popups, etc., can be placed here.
+  </script>
+
+</body>
+</html>
