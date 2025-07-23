@@ -852,4 +852,183 @@
       channelSelector.innerHTML = '';
       
       // Create button for each link
-      chann
+      channelLinks.forEach((link, index) => {
+        const button = document.createElement('button');
+        button.className = 'channel-btn';
+        button.textContent = link.name;
+        button.onclick = () => changeChannel(link.url, button);
+        channelSelector.appendChild(button);
+
+        // Set the first channel as active by default
+        if (index === 0) {
+          button.classList.add('active');
+        }
+      });
+    }
+
+    // Change the iframe source and update active button
+    function changeChannel(url, clickedButton) {
+      const iframe = document.getElementById('contentFrame');
+      const loadingOverlay = document.getElementById('loadingOverlay');
+      
+      // Show loading overlay
+      loadingOverlay.classList.remove('hidden');
+      
+      iframe.onload = () => {
+        // Hide loading overlay after a short delay to ensure content renders
+        setTimeout(() => loadingOverlay.classList.add('hidden'), 500);
+      };
+
+      iframe.src = url;
+
+      // Update active button
+      const buttons = document.querySelectorAll('.channel-btn');
+      buttons.forEach(btn => btn.classList.remove('active'));
+      clickedButton.classList.add('active');
+    }
+
+    // Popup logic
+    function showPopup() {
+      const popup = document.getElementById('popupMessage');
+      popup.style.display = 'block';
+      setTimeout(() => popup.classList.add('show'), 10); // Delay for transition
+    }
+
+    function hidePopup() {
+      const popup = document.getElementById('popupMessage');
+      popup.classList.remove('show');
+      setTimeout(() => popup.style.display = 'none', 300); // Delay for transition
+    }
+
+    function joinTelegram() {
+      // Replace with your actual Telegram channel link
+      window.open('https://t.me/yourchannel', '_blank');
+      hidePopup();
+    }
+
+    // Live chat functionality
+    function toggleLiveChat() {
+      const chatMessages = document.getElementById('chatMessages');
+      const toggleIcon = document.getElementById('toggleIcon');
+      const toggleText = document.getElementById('toggleText');
+      const chatToggle = document.getElementById('chatToggle');
+      
+      isLiveChatEnabled = !isLiveChatEnabled;
+      
+      if (isLiveChatEnabled) {
+        chatMessages.classList.remove('disabled');
+        toggleIcon.classList.remove('off');
+        chatToggle.classList.remove('off');
+        toggleText.textContent = 'ON';
+        startLiveChat(); // Restart chat simulation
+      } else {
+        chatMessages.classList.add('disabled');
+        toggleIcon.classList.add('off');
+        chatToggle.classList.add('off');
+        toggleText.textContent = 'OFF';
+        clearInterval(chatInterval); // Stop chat simulation
+      }
+    }
+
+    // Dummy data and functions for live chat simulation
+    const sampleUsers = ['AlexGamer', 'TechieTom', 'StreamFan_99', 'LiveWatcher', 'Guest_1234', 'ProPlayer', 'NewsJunkie', 'ReactQueen'];
+    const sampleMessages = [
+      'This is awesome!', 'Anyone else seeing this?', 'What a moment!', 'Thanks for the stream!', 'Loud and clear.', 'Hyped for this!', 'Any news on the next event?', 'This is way better than the other stream.'
+    ];
+    const sampleBadges = ['MOD', 'VIP', null, null, null, 'PRO', 'NEWS', 'VIP'];
+
+    function getRandomElement(arr) {
+      return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    function addChatMessage() {
+      if (!isLiveChatEnabled) return;
+
+      const chatMessages = document.getElementById('chatMessages');
+      const userIndex = Math.floor(Math.random() * sampleUsers.length);
+      const username = sampleUsers[userIndex];
+      const messageText = getRandomElement(sampleMessages);
+      const badge = sampleBadges[userIndex];
+      const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      const messageElement = document.createElement('div');
+      messageElement.className = 'chat-message';
+      
+      let badgeHTML = '';
+      if (badge) {
+        badgeHTML = `<span class="user-badge">${badge}</span>`;
+      }
+
+      messageElement.innerHTML = `
+        <div class="chat-username">${username} ${badgeHTML}</div>
+        <div class="chat-text">${messageText}</div>
+        <div class="chat-time">${time}</div>
+      `;
+      
+      chatMessages.appendChild(messageElement);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+
+      // Limit number of messages
+      if (chatMessages.children.length > 50) {
+        chatMessages.removeChild(chatMessages.firstChild);
+      }
+    }
+    
+    // Simulate typing indicator
+    function simulateTyping() {
+        const typingIndicator = document.getElementById('typingIndicator');
+        const typingUser = document.getElementById('typingUser');
+        
+        if (!isLiveChatEnabled || Math.random() > 0.3) {
+            typingIndicator.style.display = 'none';
+            return;
+        }
+
+        typingUser.textContent = getRandomElement(sampleUsers);
+        typingIndicator.style.display = 'flex';
+
+        setTimeout(() => {
+            typingIndicator.style.display = 'none';
+        }, Math.random() * 3000 + 2000); // Show for 2-5 seconds
+    }
+    
+    // Simulate online count fluctuations
+    function updateOnlineCount() {
+        const onlineCountEl = document.getElementById('onlineCount');
+        const fluctuation = Math.floor(Math.random() * 20) - 10; // Fluctuate by -10 to +10
+        onlineUsers = Math.max(500, onlineUsers + fluctuation); // Ensure it doesn't drop too low
+        onlineCountEl.textContent = onlineUsers.toLocaleString();
+    }
+
+    function startLiveChat() {
+      clearInterval(chatInterval); // Clear any existing interval
+      if (isLiveChatEnabled) {
+        chatInterval = setInterval(() => {
+          addChatMessage();
+          simulateTyping();
+          updateOnlineCount();
+        }, 3000); // New message every 3 seconds
+      }
+    }
+
+    // Initial load
+    document.addEventListener('DOMContentLoaded', () => {
+      generateChannelButtons();
+
+      const loadingOverlay = document.getElementById('loadingOverlay');
+      const iframe = document.getElementById('contentFrame');
+      
+      // Load first channel if links exist
+      if (channelLinks.length > 0) {
+        iframe.onload = () => setTimeout(() => loadingOverlay.classList.add('hidden'), 500);
+        iframe.src = channelLinks[0].url;
+      } else {
+        loadingOverlay.classList.add('hidden');
+      }
+
+      // Start the live chat simulation
+      startLiveChat();
+    });
+  </script>
+</body>
+</html>
