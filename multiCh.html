@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live TV Viewer - England vs India</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+      font-family: 'Segoe UI', Arial, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+      animation: backgroundShift 20s ease-in-out infinite;
+    }
+
+    @keyframes backgroundShift {
+      0%, 100% { background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%); }
+      33% { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f172a 100%); }
+      66% { background: linear-gradient(135deg, #16213e 0%, #0f172a 50%, #0a0a0a 100%); }
+    }
+
+    /* Title Section */
+    .title-section {
+      text-align: center;
+      padding: 20px 0;
+      animation: fadeInDown 1s ease-out;
+    }
+
+    @keyframes fadeInDown {
+      from { transform: translateY(-30px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .match-title {
+      color: #fff;
+      font-size: 28px;
+      font-weight: 700;
+      margin: 0;
+      text-shadow: 0 2px 10px rgba(0,136,204,0.3);
+      background: linear-gradient(135deg, #0088cc, #00b4d8, #fff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .match-subtitle {
+      color: rgba(255,255,255,0.8);
+      font-size: 16px;
+      margin: 8px 0 0 0;
+      font-weight: 500;
+    }
+
+    /* Stream Buttons Section */
+    .stream-buttons-section {
+      width: 100%;
+      max-width: 900px;
+      margin: 20px auto;
+      padding: 0 20px;
+      animation: slideUp 0.8s ease-out 0.2s both;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(30px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .stream-buttons-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stream-btn {
+      background: linear-gradient(135deg, #dc2626 0%, #f87171 50%, #ef4444 100%);
+      color: white;
+      border: none;
+      padding: 18px 24px;
+      border-radius: 16px;
+      font-weight: 600;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 6px 20px rgba(220, 38, 38, 0.3);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.1);
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .stream-btn.willow {
+      background: linear-gradient(135deg, #059669 0%, #10b981 50%, #34d399 100%);
+      box-shadow: 0 6px 20px rgba(5, 150, 105, 0.3);
+    }
+
+    .stream-btn.sony {
+      background: linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #c084fc 100%);
+      box-shadow: 0 6px 20px rgba(124, 58, 237, 0.3);
+    }
+
+    .stream-btn.sony-hd {
+      background: linear-gradient(135deg, #0369a1 0%, #0ea5e9 50%, #38bdf8 100%);
+      box-shadow: 0 6px 20px rgba(3, 105, 161, 0.3);
+    }
+
+    .stream-btn-title {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .stream-btn-subtitle {
+      font-size: 14px;
+      opacity: 0.9;
+      font-weight: 400;
+    }
+
+    .stream-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+      transition: left 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .stream-btn:hover::before {
+      left: 100%;
+    }
+
+    .stream-btn:hover {
+      transform: translateY(-4px) scale(1.02);
+    }
+
+    .stream-btn.willow:hover {
+      box-shadow: 0 12px 30px rgba(5, 150, 105, 0.5);
+      background: linear-gradient(135deg, #047857 0%, #059669 50%, #10b981 100%);
+    }
+
+    .stream-btn.sony:hover {
+      box-shadow: 0 12px 30px rgba(124, 58, 237, 0.5);
+      background: linear-gradient(135deg, #6d28d9 0%, #7c3aed 50%, #a855f7 100%);
+    }
+
+    .stream-btn.sony-hd:hover {
+      box-shadow: 0 12px 30px rgba(3, 105, 161, 0.5);
+      background: linear-gradient(135deg, #0284c7 0%, #0369a1 50%, #0ea5e9 100%);
+    }
+
+    .stream-btn:active {
+      transform: translateY(-2px) scale(0.98);
+    }
+
+    /* Responsive video iframe */
+    .video-container {
+      width: 100%;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 20px;
+      position: relative;
+      animation: slideDown 0.8s ease-out 0.4s both;
+    }
+
+    @keyframes slideDown {
+      from { transform: translateY(-30px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    
+    iframe {
+      width: 100%;
+      height: 320px;
+      border: none;
+      background: #111;
+      display: block;
+      border-radius: 16px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.1);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+      animation: glow 3s ease-in-out infinite;
+    }
+
+    @keyframes glow {
+      0%, 100% { box-shadow: 0 8px 40px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.1); }
+      50% { box-shadow: 0 12px 50px rgba(0,136,204,0.2), 0 0 0 1px rgba(0,136,204,0.3); }
+    }
+    
+    iframe:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(0,136,204,0.5), 0 12px 50px rgba(0,136,204,0.3);
+      transform: translateY(-3px) scale(1.005);
+    }
+
+    /* Loading overlay */
+    .loading-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, rgba(26,26,46,0.9) 0%, rgba(22,33,62,0.9) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 16px;
+      backdrop-filter: blur(10px);
+      opacity: 1;
+      transition: opacity 0.5s ease;
+      z-index: 10;
+    }
+
+    .loading-overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid rgba(0,136,204,0.3);
+      border-top: 4px solid #0088cc;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Manual Link Input Section */
+    .link-input-section {
+      width: 100%;
+      max-width: 900px;
+      margin: 20px auto;
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      padding: 0 20px;
+      animation: slideUp 0.6s ease-out 0.6s both;
+    }
+
+    .link-input {
+      flex: 1;
+      max-width: 600px;
+      padding: 14px 20px;
+      border: 2px solid rgba(59, 130, 246, 0.3);
+      border-radius: 14px;
+      background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 15%, #1e40af 100%);
+      color: white;
+      font-size: 14px;
+      font-weight: 500;
+      outline: none;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      backdrop-filter: blur(10px);
+    }
+
+    .link-input::placeholder {
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    .link-input:focus {
+      border-color: #60a5fa;
+      box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.3);
+      transform: translateY(-2px);
+    }
+
+    .load-btn {
+      background: linear-gradient(135deg, #dc2626 0%, #f87171 50%, #ef4444 100%);
+      color: white;
+      border: none;
+      padding: 14px 28px;
+      border-radius: 14px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 4px 15px rgba(220, 38, 38, 0.3);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.1);
+      min-width: 120px;
+    }
+
+    .load-btn:hover {
+      transform: translateY(-4px) scale(1.05);
+      box-shadow: 0 12px 30px rgba(220, 38, 38, 0.5);
+    }
+
+    /* Enhanced Telegram Button */
+    .telegram-section {
+      width: 100%;
+      max-width: 900px;
+      margin: 24px auto;
+      text-align: center;
+      padding: 0 20px;
+      animation: fadeInScale 0.8s ease-out 0.8s both;
+    }
+
+    @keyframes fadeInScale {
+      from { transform: scale(0.9); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .telegram-btn {
+      display: inline-block;
+      background: linear-gradient(135deg, #0088cc 0%, #00b4d8 50%, #0077b6 100%);
+      color: #fff;
+      padding: 18px 40px;
+      border: none;
+      border-radius: 18px;
+      font-size: 18px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(0,136,204,0.3);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.1);
+      text-decoration: none;
+      animation: pulse 4s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.02); }
+    }
+
+    .telegram-btn::after {
+      content: '✈';
+      position: absolute;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 20px;
+      transition: transform 0.4s ease;
+    }
+
+    .telegram-btn:hover {
+      transform: translateY(-4px) scale(1.05);
+      box-shadow: 0 12px 35px rgba(0,136,204,0.5);
+    }
+
+    .telegram-btn:hover::after {
+      transform: translateY(-50%) rotate(15deg);
+    }
+
+    /* Comment Box Container */
+    .comment-box-container {
+      width: 100%;
+      max-width: 900px;
+      margin: 0 auto;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f172a 100%);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.1);
+      backdrop-filter: blur(20px);
+      position: relative;
+      animation: slideInChat 1s ease-out 1s both;
+    }
+
+    @keyframes slideInChat {
+      from { transform: translateY(50px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .comment-header {
+      background: linear-gradient(135deg, #0088cc 0%, #00b4d8 50%, #0077b6 100%);
+      padding: 20px 24px;
+      color: white;
+      font-weight: 600;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .live-indicator {
+      width: 14px;
+      height: 14px;
+      background: radial-gradient(circle, #ff4444 0%, #cc0000 100%);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+      box-shadow: 0 0 15px rgba(255,68,68,0.6);
+      position: relative;
+    }
+
+    .live-indicator::after {
+      content: '';
+      position: absolute;
+      top: -2px;
+      left: -2px;
+      right: -2px;
+      bottom: -2px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,68,68,0.3);
+      animation: ripple 2s infinite;
+    }
+
+    @keyframes ripple {
+      0% { transform: scale(0.8); opacity: 1; }
+      100% { transform: scale(2); opacity: 0; }
+    }
+
+    .comment-box-frame {
+      width: 100%;
+      height: 400px;
+      border: none;
+      background: #111;
+      display: block;
+    }
+
+    /* Current Stream Indicator */
+    .current-stream {
+      text-align: center;
+      margin: 16px 0;
+      padding: 12px 20px;
+      background: linear-gradient(135deg, rgba(0,136,204,0.1) 0%, rgba(0,180,216,0.1) 100%);
+      border-radius: 12px;
+      border: 1px solid rgba(0,136,204,0.3);
+      color: #0088cc;
+      font-weight: 600;
+      font-size: 14px;
+      animation: fadeIn 0.5s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    /* Enhanced Popup styling */
+    #popupMessage {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.9);
+      min-width: 300px;
+      background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+      color: #1a202c;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      z-index: 1000;
+      text-align: center;
+      padding: 32px 24px 24px 24px;
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.2);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      opacity: 0;
+    }
+
+    #popupMessage.show {
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 1;
+    }
+
+    #popupMessage h3 {
+      margin-top: 0;
+      color: #0088cc;
+      font-size: 1.4em;
+      font-weight: 700;
+    }
+
+    #popupMessage p {
+      margin: 12px 0 20px 0;
+      font-size: 1em;
+      color: #4a5568;
+    }
+
+    #popupMessage button {
+      padding: 12px 24px;
+      font-size: 16px;
+      margin: 12px 8px 0 8px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .popup-join {
+      background: linear-gradient(135deg, #0088cc 0%, #00b4d8 100%);
+      color: white;
+      box-shadow: 0 4px 15px rgba(0,136,204,0.3);
+    }
+
+    .popup-join:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,136,204,0.4);
+    }
+
+    .popup-cancel {
+      background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e0 100%);
+      color: #4a5568;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    .popup-cancel:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    }
+
+    @media (max-width: 700px) {
+      .match-title {
+        font-size: 22px;
+      }
+      
+      .stream-buttons-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      
+      .stream-btn {
+        padding: 16px 20px;
+        font-size: 15px;
+      }
+      
+      .stream-btn-title {
+        font-size: 16px;
+      }
+      
+      .video-container {
+        padding: 0 16px;
+      }
+      
+      iframe {
+        height: 250px;
+        border-radius: 12px;
+      }
+      
+      .link-input-section {
+        gap: 12px;
+        margin: 16px auto;
+        flex-direction: column;
+        padding: 0 16px;
+      }
+      
+      .link-input {
+        max-width: none;
+      }
+      
+      .load-btn {
+        padding: 12px 20px;
+        font-size: 13px;
+        min-width: 100px;
+        width: 100%;
+      }
+      
+      .comment-box-container {
+        margin: 16px 16px 0 16px;
+        border-radius: 16px;
+      }
+      
+      .comment-box-frame {
+        height: 300px;
+      }
+      
+      .comment-header {
+        padding: 16px 20px;
+        font-size: 16px;
+      }
+      
+      .telegram-btn {
+        padding: 16px 32px;
+        font-size: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Title Section -->
+  <div class="title-section">
+    <h1 class="match-title">England Women vs India Women</h1>
+    <p class="match-subtitle">1st ODI - Live Streaming</p>
+  </div>
+
+  <!-- Stream Buttons Section -->
+  <div class="stream-buttons-section">
+    <div class="stream-buttons-grid">
+      <button class="stream-btn willow" onclick="loadStream('https://starry7c.github.io/India-england-willow/', 'Willow TV Stream')">
+        <div class="stream-btn-title">🏏 Willow TV</div>
+        <div class="stream-btn-subtitle">Premium Cricket Coverage</div>
+      </button>
+      
+      <button class="stream-btn sony" onclick="loadStream('https://starry7c.github.io/Sony-hindi/', 'Sony Ten 3 Hindi')">
+        <div class="stream-btn-title">📺 Sony Ten 3 Hindi</div>
+        <div class="stream-btn-subtitle">Hindi Commentary</div>
+      </button>
+      
+      <button class="stream-btn sony-hd" onclick="loadStream('https://tataplay.slivcdn.com/hls/live/2020591/TEN3HD/master_3500.m3u8', 'Sony Ten 3 HD (1080p)')">
+        <div class="stream-btn-title">🎯 Sony Ten 3 HD</div>
+        <div class="stream-btn-subtitle">1080p High Quality</div>
+      </button>
+    </div>
+
+    <div class="current-stream" id="currentStream" style="display: none;">
+      Currently watching: <span id="streamName"></span>
+    </div>
+  </div>
+
+  <div class="video-container">
+    <div class="loading-overlay" id="loadingOverlay">
+      <div class="spinner"></div>
+    </div>
+    <iframe
+      id="contentFrame"
+      sandbox="allow-forms allow-pointer-lock allow-same-origin allow-scripts allow-top-navigation"
+      allow="encrypted-media"
+      allowfullscreen="true"
+      scrolling="no"
+      src="">
+    </iframe>
+  </div>
+
+  <!-- Manual Link Input Section -->
+  <div class="link-input-section">
+    <input 
+      type="text" 
+      id="linkInput" 
+      class="link-input" 
+      placeholder="Enter your own streaming link here..."
+      value=""
+    >
+    <button class="load-btn" onclick="loadChannel()">
+      Load Custom Stream
+    </button>
+  </div>
+
+  <!-- Telegram Button -->
+  <div class="telegram-section">
+    <button class="telegram-btn" onclick="showPopup()">
+      Join Telegram Channel
+    </button>
+  </div>
+
+  <!-- Comment Box Container -->
+  <div class="comment-box-container">
+    <div class="comment-header">
+      <div class="live-indicator"></div>
+      <span>Live Comments</span>
+    </div>
+    <iframe 
+      src="https://starry7c.github.io/Sony-hindi/2.html" 
+      class="comment-box-frame"
+      sandbox="allow-forms allow-pointer-lock allow-same-origin allow-scripts allow-top-navigation"
+      allow="encrypted-media"
+      scrolling="auto">
+    </iframe>
+  </div>
+
+  <div id="popupMessage">
+    <h3>Join our Telegram Channel</h3>
+    <p>Get instant updates and live links directly on Telegram.</p>
+    <button class="popup-join" onclick="joinTelegram()">Join Now</button>
+    <button class="popup-cancel" onclick="hidePopup()">Cancel</button>
+  </div>
+
+  <script>
+    // Load specific stream
+    function loadStream(url, streamName) {
+      const iframe = document.getElementById('contentFrame');
+      const loadingOverlay = document.getElementById('loadingOverlay');
+      const currentStreamDiv = document.getElementById('currentStream');
+      const streamNameSpan = document.getElementById('streamName');
+      
+      // Show loading overlay
+      loadingOverlay.classList.remove('hidden');
+      
+      // Update current stream indicator
+      streamNameSpan.textContent = streamName;
+      currentStreamDiv.style.display = 'block';
+      
+      iframe.onload = () => {
+        // Hide loading overlay after content loads
+        setTimeout(() => loadingOverlay.classList.add('hidden'), 800);
+      };
+
+      iframe.onerror = () => {
+        loadingOverlay.classList.add('hidden');
+        alert('Failed to load stream. Please try another option.');
+      };
+
+      iframe.src = url;
+      
+      // Scroll to video container
+      document.querySelector('.video-container').scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'center'
+      });
+    }
+
+    // Load channel from manual input
+    function loadChannel() {
+      const linkInput = document.getElementById('linkInput');
+      const iframe = document.getElementById('contentFrame');
+      const loadingOverlay = document.getElementById('loadingOverlay');
+      const currentStreamDiv = document.getElementById('currentStream');
+      const streamNameSpan = document.getElementById('streamName');
+      const url = linkInput.value.trim();
+      
+      if (!url) {
+        alert('Please enter a valid streaming link');
+        return;
+      }
+      
+      // Show loading overlay
+      loadingOverlay.classList.remove('hidden');
+      
+      // Update current stream indicator
+      streamNameSpan.textContent = 'Custom Stream';
+      currentStreamDiv.style.display = 'block';
+      
+      iframe.onload = () => {
+        setTimeout(() => loadingOverlay.classList.add('hidden'), 500);
+      };
+
+      iframe.onerror = () => {
+        loadingOverlay.classList.add('hidden');
+        alert('Failed to load custom stream. Please check the URL.');
+      };
+
+      iframe.src = url;
+      
+      // Scroll to video container
+      document.querySelector('.video-container').scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'center'
+      });
+    }
+
+    // Handle Enter key in input field
+    document.getElementById('linkInput').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        loadChannel();
+      }
+    });
+
+    // Popup logic
+    function showPopup() {
+      const popup = document.getElementById('popupMessage');
+      popup.style.display = 'block';
+      setTimeout(() => popup.classList.add('show'), 10);
+    }
+
+    function hidePopup() {
+      const popup = document.getElementById('popupMessage');
+      popup.classList.remove('show');
+      setTimeout(() => popup.style.display = 'none', 300);
+    }
+
+    function joinTelegram() {
+      // Replace with your actual Telegram channel link
+      window.open('https://t.me/yourchannel', '_blank');
+      hidePopup();
+    }
+
+    // Initial load
+    document.addEventListener('DOMContentLoaded', () => {
+      const loadingOverlay = document.getElementById('loadingOverlay');
+      
+      // Hide loading overlay initially since no content is loaded
+      loadingOverlay.classList.add('hidden');
+      
+      // Add keyboard shortcuts for stream buttons
+      document.addEventListener('keydown', function(e) {
+        if (e.altKey) {
+          switch(e.key) {
+            case '1':
+              e.preventDefault();
+              loadStream('https://starry7c.github.io/India-england-willow/', 'Willow TV Stream');
+              break;
+            case '2':
+              e.preventDefault();
+              loadStream('https://starry7c.github.io/Sony-hindi/', 'Sony Ten 3 Hindi');
+              break;
+            case '3':
+              e.preventDefault();
+              loadStream('https://tataplay.slivcdn.com/hls/live/2020591/TEN3HD/master_3500.m3u8', 'Sony Ten 3 HD (1080p)');
+              break;
+          }
+        }
+      });
+    });
+
+    // Error handling for iframe loading
+    document.getElementById('contentFrame').addEventListener('error', function() {
+      document.getElementById('loadingOverlay').classList.add('hidden');
+      alert('Stream failed to load. Please try another option or check your internet connection.');
+    });
+  </script>
+</body>
+</html>
